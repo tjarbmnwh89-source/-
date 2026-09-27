@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Creator Starter AI - مساعد ذكي لصناع المحتوى المبتدئين">
+<title>Creator Starter AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+*{box-sizing:border-box}body{margin:0;font-family:Cairo,Arial,sans-serif;background:#090e1b;color:#f8fafc}
+.container{width:min(1050px,92%);margin:auto}header{padding:20px 0;border-bottom:1px solid #ffffff12}.nav{display:flex;justify-content:space-between;align-items:center}.logo{font-weight:800;font-size:21px}.logo span{color:#7c5cff}
+.hero{text-align:center;padding:55px 0 30px}.badge{display:inline-block;padding:7px 13px;border:1px solid #7c5cff55;background:#7c5cff15;border-radius:999px;color:#c4b9ff;font-size:13px}
+h1{font-size:clamp(34px,7vw,60px);line-height:1.15;margin:18px auto 12px;max-width:800px}.gradient{background:linear-gradient(90deg,#9b86ff,#36d9ff);-webkit-background-clip:text;color:transparent}
+.hero p{color:#9da9be;line-height:1.9;max-width:680px;margin:0 auto}.app{margin:25px auto 60px;background:#10172a;border:1px solid #ffffff12;border-radius:24px;padding:20px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.quick button{background:#151f35;border:1px solid #ffffff10;color:white;padding:14px;border-radius:13px;font-family:inherit;cursor:pointer}
+.chat{min-height:330px;background:#0b1222;border-radius:18px;padding:16px;overflow:auto}.msg{max-width:86%;padding:13px 15px;border-radius:15px;margin:10px 0;line-height:1.8;white-space:pre-wrap}.bot{background:#151e34;margin-left:auto}.user{background:#7c5cff;margin-right:auto}
+.form{display:flex;gap:10px;margin-top:12px}.form textarea{flex:1;resize:none;min-height:55px;background:#151e34;border:1px solid #ffffff12;color:white;border-radius:14px;padding:12px;font:inherit;outline:none}.form button{border:0;background:#7c5cff;color:white;border-radius:14px;padding:0 20px;font:inherit;font-weight:800;cursor:pointer}
+.note{color:#68758b;font-size:12px;text-align:center;margin-top:10px}
+@media(max-width:700px){.quick{grid-template-columns:repeat(2,1fr)}.form button{padding:0 14px}.msg{max-width:94%}}
+</style>
+</head>
+<body>
+<header><div class="container nav"><div class="logo">Creator <span>Starter AI</span></div><span style="color:#7d8aa1;font-size:12px">AI Coach</span></div></header>
+
+<main class="container">
+<section class="hero">
+<div class="badge">🤖 مساعدك الذكي لصناعة المحتوى</div>
+<h1>حوّل فكرتك إلى <span class="gradient">خطة محتوى</span></h1>
+<p>مساعد عملي للمبتدئين: أفكار، Hooks، سيناريوهات وخطط نشر، في محادثة واحدة.</p>
+</section>
+
+<section class="app">
+<div class="quick">
+<button data-q="أريد بدء قناة جديدة. ساعدني من الصفر.">🚀 بدء قناة</button>
+<button data-q="أعطني أفكار فيديو مناسبة للمبتدئين.">💡 أفكار فيديو</button>
+<button data-q="لدي فكرة فيديو وأريد تحويلها إلى سيناريو.">🎬 صناعة فيديو</button>
+<button data-q="أنشئ لي خطة محتوى لمدة 30 يومًا.">📅 خطة 30 يوم</button>
+</div>
+<div class="chat" id="chat">
+<div class="msg bot">أهلًا! 👋 أنا Creator Starter AI.<br>أخبرني ماذا تريد أن تصنع، وسأساعدك خطوة بخطوة.</div>
+</div>
+<div class="form">
+<textarea id="input" placeholder="اكتب طلبك هنا..."></textarea>
+<button id="send">إرسال</button>
+</div>
+<div class="note">النسخة التجريبية — الاستخدام قد يكون محدودًا حسب حصة Gemini المجانية.</div>
+</section>
+</main>
+
+<script>
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const send = document.getElementById("send");
+
+function add(text, cls){
+  const div=document.createElement("div");
+  div.className="msg "+cls;
+  div.textContent=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+  return div;
+}
+
+async function ask(message){
+  if(!message.trim()) return;
+  add(message,"user");
+  input.value="";
+  const loading=add("يفكر...","bot");
+  send.disabled=true;
+  try{
+    const r=await fetch("/api/chat",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({message})
+    });
+    const data=await r.json();
+    loading.remove();
+    add(data.reply || data.error || "حدث خطأ.","bot");
+  }catch(e){
+    loading.remove();
+    add("تعذر الاتصال بالخادم. تأكد من تشغيل الموقع وإعداد Gemini API.","bot");
+  }finally{send.disabled=false;input.focus();}
+}
+
+send.onclick=()=>ask(input.value);
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();ask(input.value);}
+});
+document.querySelectorAll(".quick button").forEach(b=>b.onclick=()=>ask(b.dataset.q));
+</script>
+</body>
+</html>
